@@ -6,8 +6,6 @@
 #include "stm32f4xx_fsmc.h"
 #endif
 
-#include <stdio.h>
-
 static void initSystick();
 static void delayMillis(uint32_t timedelay);
 static volatile uint32_t millisecondCounter;
@@ -34,7 +32,7 @@ void SysTick_Handler(void) {
 int main(void)
 {
     initSystick();
-    unsigned int pin = 13;		  // pin 13 is the orange LED
+    unsigned int pin = 15;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;  // enable the clock to GPIOD
     GPIOD->MODER = (1 << 2*pin);          // set pin 13 to be general purpose output
 
@@ -43,12 +41,10 @@ int main(void)
 	       delayMillis(1000);
 
 	       GPIOD->ODR ^= (1 << pin);           // Toggle pin 
-	       		setbuf(stdout, NULL);
-	       printf("Toggling LED from off to on\r\n"); //waiting 1000 millisecond to turn on the LED
+
 	       delayMillis(1000);
 	       GPIOD->ODR ^= (1<<pin);
-	       setbuf(stdout,NULL);
-	       printf("Toggling LED from on to off\r\n"); //waiting 1000 millisecond to turn off the LED
+
 
     }
 }

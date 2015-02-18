@@ -1,6 +1,7 @@
 
 # Source files 
 SRCS=main.c system_stm32f4xx.c 
+NODEBUGSRCS=main-nodebug.c system_stm32f4xx.c 
 
 # Binary will be generated with this name (.elf, etc)
 PROJ_NAME=blinky
@@ -28,10 +29,12 @@ CFLAGS += -I$(STM_COMMON)/Libraries/CMSIS/Include -I$(STM_COMMON)/Libraries/CMSI
 CFLAGS += -I$(STM_COMMON)/Libraries/STM32F4xx_StdPeriph_Driver/inc
 
 
+
 # add startup file to build
 SRCS += $(STM_COMMON)/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/startup_stm32f4xx.s 
 OBJS = $(SRCS:.c=.o)
-
+NODEBUGSRCS +=$(STM_COMMON)/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/startup_stm32f4xx.s 
+OBJS = $(NODEBUGSRCS:.c=.o)
 SEMIHOSTING_FLAGS = --specs=rdimon.specs -lc -lrdimon 
 
 
@@ -46,6 +49,15 @@ $(PROJ_NAME).elf: $(SRCS)
 
 clean:
 	rm -f $(PROJ_NAME).elf 
+
+nodebug:$(PROJ_NAME)-nodebug.elf
+
+$(PROJ_NAME)-nodebug.elf:$(NODEBUGSRCS)
+	$(CC) $(CFLAGS) $^ -o $@    
+	$(SIZE) $@ 
+
+clean:
+	rm -f $(PROJ_NAME)-nodebug.elf 
 
 
 #######################################################
