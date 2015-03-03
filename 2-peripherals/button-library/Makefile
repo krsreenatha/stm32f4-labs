@@ -8,6 +8,8 @@ PERIPH = $(LIBDIR)/STM32F4xx_StdPeriph_Driver
 
 SOURCES += startup_stm32f4xx.S
 SOURCES += system_stm32f4xx.c
+SOURCES += ../common/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c
+SOURCES += ../common/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
 
 SOURCES += src/main.c
 
