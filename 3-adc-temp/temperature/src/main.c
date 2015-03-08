@@ -7,6 +7,8 @@
 
 void initTempSensor(void);
 float readTemp(void);
+void convVolt(float* a);
+void convADC(float* a,int n);
 
 volatile uint32_t msTicks = 0;                      
 
@@ -66,7 +68,9 @@ void initTempSensor(){
 	// Set the ADC resolution to 12 bits
 	// and enable continuous conversion mode
 
-
+	adc.ADC_Resolution=ADC_Resolution_12b;
+	adc.ADC_ContinuousConvMode = ENABLE;
+	
 
 
 
@@ -99,10 +103,7 @@ float readTemp(){
         // Here, v_min = 0, v_max = 3.3, and n depends on the resolution
         // of the ADC (refer to the adc intialization in initTempSensor() function)
 	// Assign the voltage value back to the temperature variable
-
-
-
-
+        convADC(&temperature,12);
 
 	setbuf(stdout, NULL);
         printf("%f, " , temperature);
@@ -113,11 +114,22 @@ float readTemp(){
         // (v_sense is the voltage value we calculated in the previous step 
 	// and assigned back to temp)
 	// Temperature (in °C) = {(V_SENSE - V_25) / Avg_Slope} + 25
-
+	convVolt(&temperature);
 
 
 	setbuf(stdout, NULL);
         printf("%f\n" , temperature);
 	
 	return temperature;
+}
+void convADC(float* a,int n){
+	int i=0,j=1;
+	for(i=0;i<n;i++){
+	j=2*j;
+	}
+	j--;
+	*a = (*a)*3.3/j;
+}
+void convVolt(float* a){
+	*a=(*a-0.76)/(0.0025)+25;
 }
