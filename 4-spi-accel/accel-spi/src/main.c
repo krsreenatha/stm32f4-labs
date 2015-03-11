@@ -87,8 +87,8 @@ void initAccelerometer() {
 	spi.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	spi.SPI_FirstBit = SPI_FirstBit_MSB;
 	spi.SPI_Mode = SPI_Mode_Master;
-	spi.SPI_CPOL = SPI_CPOL_Low;
-	spi.SPI_CPHA = SPI_CPHA_1Edge;
+	spi.SPI_CPOL = SPI_CPOL_High;
+	spi.SPI_CPHA = SPI_CPHA_2Edge;
 	spi.SPI_NSS = SPI_NSS_Soft;
 
 	SPI_Init(SPI1, &spi);
@@ -125,41 +125,45 @@ void initAccelerometer() {
 	tmpreg = (uint8_t) (temp);
 
 	// Write configuration value (lower byte) to MEMS CTRL_REG4 register
-	writeSPI(tmpreg, LIS3DSH_CTRL_REG4_ADDR);
+	writeSPI(LIS3DSH_CTRL_REG4_ADDR,tmpreg);
 
 	tmpreg = (uint8_t) (temp >> 8);
 
 	// Write configuration value (upper byte) to MEMS CTRL_REG5 register
-	writeSPI(tmpreg, LIS3DSH_CTRL_REG5_ADDR);
+	writeSPI(LIS3DSH_CTRL_REG5_ADDR,tmpreg);
 }
 
 
 void writeSPI(uint8_t address, uint8_t data){
  
 	// set chip select line low (use GPIO_ResetBits)
-	 
+	 GPIO_ResetBits(GPIOE,GPIO_Pin_3);
 
 	// The SPI_I2S_FLAG_TXE flag gives the status of the transmit buffer
 	// register. Check its status with SPI_I2S_GetFlagStatus. 
 	// When it is *not* set, send 'address' using SPI1 with SPI_I2S_SendData
-
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_TXE)==RESET);
+	SPI_I2S_SendData(SPI1,address);
 
 	// The SPI_I2S_FLAG_RXNE flag gives the status of the receiver buffer 
 	// register. Check its status with SPI_I2S_GetFlagStatus. 
 	// When it is *not* set, receive data with SPI_I2S_ReceiveData
 	// (recall that SPI *requires* full duplex, so you should always 
 	// receive a byte for each byte you send.)
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==RESET);
+	address=SPI_I2S_ReceiveData(SPI1);
 
-	 
 	// When the transmit buffer flag is *not* set, send 
 	// 'data' using SPI1
-
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_TXE)==RESET);
+	SPI_I2S_SendData(SPI1,data);
 	// When the receive buffer flag is *not* set, receive a byte 
 	// over SPI1
-
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==RESET);
+	data=SPI_I2S_ReceiveData(SPI1);
 
 	// set chip select line high (use GPIO_SetBits)
-	 
+	 GPIO_SetBits(GPIOE,GPIO_Pin_3);
 }
 
 
@@ -169,13 +173,14 @@ uint8_t readSPI(uint8_t address){
 	uint8_t data;
  
 	// set chip select line low (use GPIO_ResetBits)
-	 
+	 GPIO_ResetBits(GPIOE,GPIO_Pin_3);
 	 
 	// Read operations require a 7-bit register address and bit 8 set to 1, so 
 	// set `address` to `address` ORed with 1000 0000 (0x80 or 128) 
 	// (See section 6.2.1 of the data sheet -
 	// http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00040962.pdf
 	// - for more details)
+	address |=(1<<7);
 	
 
 	// The SPI_I2S_FLAG_TXE flag gives the status of the transmit buffer
@@ -194,12 +199,19 @@ uint8_t readSPI(uint8_t address){
 	// '0x00' as a dummy byte using SPI1
 	// (recall that SPI *requires* full duplex, so you should always 
 	// send a byte for each byte you receive.)
-	 
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_TXE)==RESET);
+	SPI_I2S_SendData(SPI1,address);
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_TXE)==RESET);
+	SPI_I2S_SendData(SPI1,0x00);
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==RESET);
+	address=SPI_I2S_ReceiveData(SPI1);
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==RESET);
+	data=SPI_I2S_ReceiveData(SPI1);
 	// When the receive buffer flag is *not* set, receive a byte 
 	// over SPI1. Save the byte in `data`
 
 	// set chip select line high (use GPIO_SetBits)
-	 
+	GPIO_SetBits(GPIOE,GPIO_Pin_3);
 	return data;
 }
  
@@ -212,18 +224,20 @@ void readAxes(AccelerometerDataStruct *dat) {
 	
 	// Use readSPI to read in values from LIS3DSH_OUT_X_L_ADDR into axesValues[0]
 	// and LIS3DSH_OUT_X_H_ADDR into axesValues[1]
-
+	axesValues[0]=readSPI(LIS3DSH_OUT_X_L_ADDR);
+	axesValues[1]=readSPI(LIS3DSH_OUT_X_H_ADDR);
 	// Use readSPI to read in values from LIS3DSH_OUT_Y_L_ADDR into axesValues[2]
 	// and LIS3DSH_OUT_Y_H_ADDR into axesValues[3]
-	
-
+	axesValues[2]=readSPI(LIS3DSH_OUT_Y_L_ADDR);	
+	axesValues[3]=readSPI(LIS3DSH_OUT_Y_H_ADDR);
 	// Use readSPI to read in values from LIS3DSH_OUT_Z_L_ADDR into axesValues[4]
 	// and LIS3DSH_OUT_Z_H_ADDR into axesValues[5]
-
+	axesValues[4]=readSPI(LIS3DSH_OUT_Z_L_ADDR);
+	axesValues[5]=readSPI(LIS3DSH_OUT_Z_H_ADDR);
 	// Use bit shifting to combine the two bytes for each axis into one 16-bit value
 	// in the AccelerometerDataStruct that we passed by reference
-	dat->X = (int16_t)(FILL IN THIS PART) * LIS3DSH_SENSITIVITY_0_06G;
-	dat->Y = (int16_t)(FILL IN THIS PART) * LIS3DSH_SENSITIVITY_0_06G;
-	dat->Z = (int16_t)(FILL IN THIS PART) * LIS3DSH_SENSITIVITY_0_06G;
+	dat->X = (int16_t)((axesValues[1]<<8)+axesValues[0]) * LIS3DSH_SENSITIVITY_0_06G;
+	dat->Y = (int16_t)((axesValues[3]<<8)+axesValues[2]) * LIS3DSH_SENSITIVITY_0_06G;
+	dat->Z = (int16_t)((axesValues[5]<<8)+axesValues[4]) * LIS3DSH_SENSITIVITY_0_06G;
 }
 
