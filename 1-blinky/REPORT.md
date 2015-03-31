@@ -48,6 +48,7 @@ Answer:
 location:
 /home/jizhou/el6483-jz1958/1-blinky/src/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO
 
+
 What form is the startup code given in? (C code, assembly, binary?)
 Answer:
 the startip code is given in assembly code.
