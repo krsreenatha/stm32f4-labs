@@ -1,27 +1,53 @@
-#ifndef USE_STDPERIPH_DRIVER
-#define USE_STDPERIPH_DRIVER
-#endif
+#include <stdio.h>
+
+#include "main.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_spi.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_tim.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_rng.h"
+#include "misc.h"
+#include "stm32f4xx_syscfg.h"
+
 
 #define ABS(x) ((x)<0 ? -(x) : (x))
 
-#define THRESHOLD    0
+#define THRESHOLD    1500
 
-#include <stdio.h>
+#define STARTING 00
+#define WAITING  01
+#define SHAKING  10
+#define DISPLAY  11
 
-#include "stm32f4xx.h"
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
-#include "stm32f4xx_spi.h"
-#include "main.h"
+uint8_t state = STARTING;
+
+/* The states are:
+STARTING – during initialization
+WAITING – waiting for first shake
+SHAKING – while shaking the board
+DISPLAYING – the result is being displayed on the LEDs
+*/
+
+const uint16_t LEDS = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+
+uint32_t bounceCounter = 0;
+float BOUNCE_DELAY = 1000;
+int flage;
 
 static void initSystick();
-static volatile uint32_t millisecondCounter;
-
 void initAccelerometer();
+void initLeds();
+void initRng();
+
 void readAxes();
 uint8_t readSPI(uint8_t);
 void writeSPI(uint8_t, uint8_t);
-float BOUNCE_DELAY=1000;
+
+int8_t isShaking();
+
+void showRandomNumber();
 
 typedef struct {
 	int16_t X;
@@ -29,39 +55,82 @@ typedef struct {
 	int16_t Z;
 } AccelerometerDataStruct;
 
+AccelerometerDataStruct dat;
+AccelerometerDataStruct datOld;
+
 void initSystick() {
-	millisecondCounter=0;
+	// You can change the frequency of the SysTick interrupt if you want
 	SysTick_Config(SystemCoreClock/1000);
+
 }
  
-void SysTick_Handler(void) { millisecondCounter++; }
+void SysTick_Handler(void) { 
+
+    switch(state) {
+    case STARTING:
+        // Fill in any necessary actions here
+	state=STARTING;
+        break;
+    case WAITING: 
+        // Fill in any necessary actions here
+	if(isShaking()==1){
+		state=SHAKING;	
+		
+	}else{
+		state=WAITING;
+	}
+        break;
+    case DISPLAY:
+        // Fill in any necessary actions here
+	if(isShaking()==0 && flage ==1){
+		showRandomNumber();
+		flage=0;
+		state=DISPLAY;
+	}else if(isShaking()==0 && flage ==0){
+		state=DISPLAY;
+	}else{
+		state=SHAKING;
+	}
+        break;
+    case SHAKING:
+        // Fill in any necessary actions here
+	if(isShaking()==1){
+		state=SHAKING;
+		flage=0;
+	}else if(isShaking()==0 && flage==100){
+		state=DISPLAY;
+		flage=1;
+	}else {
+		flage++;
+	}
+        break;
+    default:
+	state = WAITING;
+	break;
+    }
+
+}
  
 int main() {
-
+	
 	SystemInit();
-
 	initSystick();
+	initRng();
 	initAccelerometer();
+	initLeds();
+	
+	state = WAITING;
 
-	AccelerometerDataStruct dat;
-
-	uint32_t lastTime = 0;
-
-	while(1) {
-		if (millisecondCounter > lastTime + 100) {
-			readAxes(&dat);	
-			setbuf(stdout, NULL);
-			printf("X: %d Y: %d Z: %d\n", dat.X, dat.Y, dat.Z);
-			BOUNCE_DELAY = ABS(dat.X*0.33+dat.Y*0.33+(dat.Z-900)*0.33);
-			printf("delay:%f\n", BOUNCE_DELAY);
-			
-			lastTime = millisecondCounter;
-		}
-	}
+	while(1);
 }
 
 
+void initRng() {
+	
+   RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_RNG, ENABLE);
+   RNG_Cmd(ENABLE);
 
+}
 
 void initAccelerometer() {
 
@@ -143,7 +212,6 @@ void initAccelerometer() {
 	writeSPI(LIS3DSH_CTRL_REG5_ADDR,tmpreg);
 
 	writeSPI(LIS3DSH_CTRL_REG5_ADDR, tmpreg);
-
 }
 
 
@@ -186,6 +254,7 @@ void writeSPI(uint8_t address, uint8_t data){
 
 	// set chip select line high (use GPIO_SetBits)
 	 GPIO_SetBits(GPIOE,GPIO_Pin_3);
+
 }
 
 
@@ -267,4 +336,47 @@ void readAxes(AccelerometerDataStruct *dat) {
 	dat->Z = (int16_t)((axesValues[5]<<8)+axesValues[4]) * LIS3DSH_SENSITIVITY_0_06G;
 
 }
+
+
+
+void initLeds() {
+    // Enable GPIOD Clock
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+    // Set GPIOD pins 12-15 mode to output
+	GPIOD->MODER = 0X55000000;
+
+}
+
+
+
+void showRandomNumber() {
+	GPIO_ResetBits(GPIOD, LEDS);
+
+        /* Wait for the data to appear.*/
+        while(RESET == RNG_GetFlagStatus(RNG_FLAG_DRDY)){}
+	// Don't let the number be zero
+	int n = 0;
+ 	while (!n) {
+		// Use 4 bits of random number to set LEDs
+		n = RNG_GetRandomNumber() & 0xf << 12;
+	}
+	GPIO_SetBits(GPIOD, n);
+
+}
+
+int8_t isShaking() {
+	//in order to judge if the board is in shaking state, we need to debounce technology. 
+	readAxes(&dat);
+	if(ABS(dat.X)>THRESHOLD|ABS(dat.Y)>THRESHOLD|(dat.Z-900)>THRESHOLD){
+		return 1;
+	}
+	else return 0;
+}
+
+
+
+
+
+
+
 

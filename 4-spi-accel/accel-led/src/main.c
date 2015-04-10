@@ -162,12 +162,20 @@ void initAccelerometer() {
 	tmpreg = (uint8_t) (temp);
 
 	// Write configuration value (lower byte) to MEMS CTRL_REG4 register
+<<<<<<< HEAD
 	writeSPI(LIS3DSH_CTRL_REG4_ADDR,tmpreg);
+=======
+	writeSPI(LIS3DSH_CTRL_REG4_ADDR, tmpreg);
+>>>>>>> upstream/master
 
 	tmpreg = (uint8_t) (temp >> 8);
 
 	// Write configuration value (upper byte) to MEMS CTRL_REG5 register
+<<<<<<< HEAD
 	writeSPI(LIS3DSH_CTRL_REG5_ADDR,tmpreg);
+=======
+	writeSPI(LIS3DSH_CTRL_REG5_ADDR, tmpreg);
+>>>>>>> upstream/master
 }
 
 
