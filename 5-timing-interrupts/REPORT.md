@@ -104,7 +104,7 @@ answer:
 change these two lines to alter the clock and duty cycle.
 
 
-10) What is the value of the `lr` while inside `TIM2_IRQHandler`? What
+10) What is the value of the `lr` at the first line of `TIM2_IRQHandler`? What
 does this special value indicate?
 answer:
 	lr store the special value 0xffffffff. when entering into interrupt, eight registers pushed on stack: R0,R1,R2,R3,R12,LR,PC,PSR. cause there is no parameters and return value for interrupt, so after interrupt, it need to reload the original registers' values. So this lr value indicates to recover these 8 registers from stack after interrupt.
