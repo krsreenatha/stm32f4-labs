@@ -170,10 +170,10 @@ static void cmd_rms(BaseSequentialStream *chp) {
   /* 
    * Creating dynamic threads using the heap allocator
   */
-  Thread *tp1 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread1, chp);
+  Thread *tp1 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-2, thread1, chp);
   Thread *tp2 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread2, chp);
-  Thread *tp3 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread3, chp);
-  Thread *tp4 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread4, chp);
+  Thread *tp3 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-1, thread3, chp);
+  Thread *tp4 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-3, thread4, chp);
 
 
   chThdSleepUntil(chTimeNow() + MS2ST(500));
