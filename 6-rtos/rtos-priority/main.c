@@ -88,11 +88,11 @@ static void cmd_priority(BaseSequentialStream *chp) {
   /* 
    * Creating dynamic threads using the heap allocator
   */
-  Thread *tp1 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread1, chp);
-  Thread *tp2 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread2, chp);
+  Thread *tp1 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-10, thread1, chp);
+  Thread *tp2 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-8, thread2, chp);
   Thread *tp3 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread3, chp);
-  Thread *tp4 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread4, chp);
-  Thread *tp5 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread5, chp);
+  Thread *tp4 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-1, thread4, chp);
+  Thread *tp5 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO-5, thread5, chp);
 
   /*
    * Now wait for the spawned thread to terminate (if it has not terminated
