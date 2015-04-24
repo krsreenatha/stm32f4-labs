@@ -119,7 +119,7 @@ static void cmd_roundrobin(BaseSequentialStream *chp) {
   */
   Thread *tp1 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO - 2, thread1, chp);
   Thread *tp2 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO - 2, thread2, chp);
-  Thread *tp3 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO - 2, thread3, chp);
+  Thread *tp3 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO, thread3, chp);
   Thread *tp4 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO - 2, thread4, chp);
   Thread *tp5 = chThdCreateFromHeap(NULL, WA_SIZE, NORMALPRIO - 2, thread5, chp);
 
