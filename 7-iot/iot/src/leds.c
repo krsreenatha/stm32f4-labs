@@ -1,3 +1,5 @@
+
+
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
@@ -12,7 +14,21 @@
  * to the four on-board LEDs.
  */
 void initLeds() {
+    // Enable GPIOD Clock
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+    // Set GPIOD pins 12-15 mode to output
+	GPIOD->MODER = 0X55000000;
 
-  // Copy this function in from lab 2
+}
 
+/**
+ * this function provide the test function to light up LEDs
+ */
+void testledup(){
+	initLeds();
+	GPIOD->BSRRL |= (1<<12|1<<13|1<<14|1<<15);
+}
+void testleddown(){
+	initLeds();
+	GPIOD->BSRRH |= (1<<12|1<<13|1<<14|1<<15);
 }

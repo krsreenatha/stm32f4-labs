@@ -23,7 +23,41 @@ void initWakeupPin() {
 
     /* Copy in your initButton() function from the `interrupt-button' 
        project in lab 5.                                             */
-
+    NVIC_InitTypeDef NVIC_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    
+    // Enable GPIOA clock for User button peripheral on GPIOA
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+    // Enable SYSCFG clock for interrupts
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    
+    // Configure PA0 pin as input
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;		
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    
+    // Connect EXTI Line0 (external interrupt line 0) to PA0 pin
+    // This is the library function equivalent of running
+    // SYSCFG->EXTICR[0] &= SYSCFG_EXTICR1_EXTI0_PA;    
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+    
+    // Configure the interrupt using library functions
+    EXTI_InitStructure.EXTI_Line = EXTI_Line0;             
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;    
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling; 
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;            
+    EXTI_Init(&EXTI_InitStructure);                         
+    
+    // Enable and set priorities for the EXTI0 interrupt in NVIC 
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;                
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;   
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;         
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;               
+    NVIC_Init(&NVIC_InitStructure);
     PWR_WakeUpPinCmd(ENABLE);                         
 }
 
@@ -61,4 +95,25 @@ void stop() {
 
 	PWR_EnterSTOPMode(PWR_Regulator_ON, PWR_STOPEntry_WFI);
 
+}
+
+/*
+ * Mesurement    State    Measured current(mA)
+ *    MCU       Normal        33.22mA
+ *    MCU       Sleep 	      15.28mA
+ *    MCU       Stop          4.45mA
+ * Breadboard  BT discovery   40.1mA
+ * Breadboard  BT connected   1.89-4.25mA
+ * Breadboard  BT Rx/Tx       19.5mA
+ */
+
+/* test for power.c function
+ * in order to test power, we need to put sleep() and stop() 
+ * put into the main.c and test the current 
+ * in order to test power during Bluetooth, we need to test the current
+ * in different modes of Bt.
+ */
+void testpower(){
+	initWakeupPin();
+	stop();
 }

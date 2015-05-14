@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include "buffer.h"
-
+#include <stdio.h>
 
 /**
  * @brief Initialize buffer, set write and read index to zero
@@ -57,4 +57,35 @@ volatile uint8_t read(buffer* buffer){
 volatile uint8_t size(buffer* buffer){
 	return ((uint8_t)(buffer->writeIndex - buffer->readIndex) % BUFF_SIZE);
 }
+
+/*
+ * the functions to test the Buffer module
+ * this function first initialize a buffer with the size of 8
+ * then input several data into the buffer and read them out,
+ * at the meantime, print the size of buffer.
+ */
+void testbuffer(){ 
+	uint8_t data[]={10,11,12,13,14,15,16,17};
+	uint8_t readdata;
+	uint8_t sizebuf;
+	buffer buffer;
+	initBuffer(&buffer);
+	//write(&buffer, data[0]);
+	//readdata = read(&buffer);
+	printf("%d\n",readdata);
+	for(int i=0;i<8;i++){
+		write(&buffer,data[i]);
+		readdata=buffer.writeIndex;
+		printf("\nthe write index is: %d", readdata);
+	}
+	for(int i=0;i<8;i++){
+		readdata=read(&buffer);
+		printf("\nthe read value is: %d",readdata);
+		readdata = buffer.readIndex;
+		printf("\nthe read index is: %d", readdata);
+		sizebuf = size(&buffer);
+		printf("\nsize of buffer is: %d",sizebuf);
+	}
+}
+
 

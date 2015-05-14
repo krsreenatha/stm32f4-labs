@@ -46,7 +46,9 @@ void playMusic() {
  *
  */
 void stopMusic() {
+
 	StopAudio();
+	GPIO_ResetBits(GPIOD,GPIO_Pin_4);
 }
 
 
@@ -115,6 +117,17 @@ static void AudioCallback(void *context, int buffer) {
 
 	if (!outOfData) {
 		ProvideAudioBuffer(samples, mp3FrameInfo.outputSamps);
+	}
+}
+
+void testmusic(){
+	while(1){		
+		playMusic();
+		for(int i=0;i<100000000;i++);	
+		setMusicVolume(140);
+		for(int i=0;i<100000000;i++);
+		stopMusic();
+		for(int i=0;i<100000000;i++);
 	}
 }
 

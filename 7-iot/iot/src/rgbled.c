@@ -93,3 +93,13 @@ void setColor(uint8_t red, uint8_t green, uint8_t blue) {
   TIM3->CCR3 = blue;
 
 }
+
+/**
+ * this function set the rgb to 10,10,10
+ */
+void testrgbled(){
+	initPwm();
+	for(int i=0;i<100;i++){
+		setColor(10,10,10);
+	}
+}

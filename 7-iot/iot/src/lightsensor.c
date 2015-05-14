@@ -95,3 +95,17 @@ int getLightReading(){
 	while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC));
 	return ADC_GetConversionValue(ADC1); 
 }
+
+/**
+ * this function test the lightsensor
+ * first init the rgbled and then setAdcThresh
+ */
+void testlightsensor(){
+	int lightsensor;
+	initAdc();
+	for(int i=0;i<1000;i++){
+		lightsensor = getLightReading();
+		printf("the value from lightsensor: %d\n",lightsensor);
+	}
+}
+

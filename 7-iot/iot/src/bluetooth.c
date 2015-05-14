@@ -132,4 +132,18 @@ int btConnected() {
     return GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_1);
 }
 
+/**
+ * bluetooth test function: test the blue tooth connection.
+ * and shows the connect state on the screen, 
+ */
+void testbt(){
+	int status;
+	initUsart();
+	initBtState();
+	for(int i=0;i<50;i++){
+		status = btConnected();
+		printf("the status of Blue tooth: %d\n",status);
+	}
+}
+
 
