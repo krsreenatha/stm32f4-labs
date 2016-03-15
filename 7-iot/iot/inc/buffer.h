@@ -26,4 +26,6 @@ volatile uint8_t read(buffer* buffer);
 /* Return size of unread data in circular buffer */
 volatile uint8_t size(buffer* buffer);
 
+void testbuffer();
+
 #endif

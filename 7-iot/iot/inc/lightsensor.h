@@ -13,5 +13,4 @@ void setAdcThresholds(uint32_t high, uint32_t low);
 
 /* Get current light reading (digital value) from light sensor */
 int getLightReading();
-
 #endif
